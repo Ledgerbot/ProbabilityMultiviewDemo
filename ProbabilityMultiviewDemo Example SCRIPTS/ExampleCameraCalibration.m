@@ -9,11 +9,11 @@ clc
 camSettings = adjustCamera(cam);
 %camSettings = adjustCamera(cam,camSettings,true);
 
-%% Acquiring Calibration Images
+%% Get Calibration Images
 imBaseName = 'im';
 calFolderName = 'ExampleCamCal';
-images = 10;
-getCalibrationImages(prv,imBaseName,calFolderName,10);
+nImages = 10;
+getCalibrationImages(prv,imBaseName,calFolderName,nImages);
 
 %% Camera Calibration
 [cameraParams,imagesUsed] = ...
@@ -23,7 +23,7 @@ getCalibrationImages(prv,imBaseName,calFolderName,10);
 % manually defining the images used during calibration for reprojecting
 %{
 cameraCalibrator;
-% Defining Used Calibration Images
+% Define Used Calibration Images
 imagesUsed = [1,2,3,4,5,7,8,9,10];
 %}
 
