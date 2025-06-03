@@ -45,7 +45,7 @@ end
 
 % Save parameters
 save('ExampleCalibrationParameters.mat','A_c2m','H_f2c',...
-    'calFolderName','cameraParams','imBaseName','imagesUsed');
+    'calFolderName','cameraParams','imBaseName','imagesUsed','nImages');
 
 %% Validating Your Calibration
 % Recovering Body-fixed Fiducial Points
@@ -147,7 +147,6 @@ plt_f2m = projectTriad(axs,A_c2m * H_f2c{i}(1:3,:),sc);
 % Place Wall-E in the image
 ptc_m = copyobj(ptc_b,axs);
 ptc_m.Vertices = p_m(1:2,:).';
-
 
 %% Improving the Visualization
 % [ALLOWS RUNNING THIS SECTION ONLY]
