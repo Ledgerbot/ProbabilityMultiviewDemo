@@ -1,9 +1,11 @@
-function varargout = UKFDesignDemoVer
-% UKFDESIGNDEMOVER displays the UKF Design Demo information.
-%   UKFDESIGNDEMOVER displays the information to the command prompt.
+function varargout = ProbabilityMultiviewDemoVer
+% PROBABILITYMULTIVIEWDEMOVER displays the Probability Multiview Demo
+% information.
+%   PROBABILITYMULTIVIEWDEMOVER displays the information to the command 
+%   prompt.
 %
-%   A = UKFDESIGNDEMOVER returns in A the sorted struct array of  
-%   version information for the UKF Design Demo.
+%   A = PROBABILITYMULTIVIEWDEMOVER returns in A the sorted struct array of  
+%   version information for the Probability Multiview Demo.
 %     The definition of struct A is:
 %             A.Name      : toolbox name
 %             A.Version   : toolbox version number
@@ -15,7 +17,7 @@ function varargout = UKFDesignDemoVer
 % Updates
 
 
-A.Name = 'UKF Design Demo';
+A.Name = 'Probability Multiview Demo';
 A.Version = '1.0.0';
 A.Release = '(R2020b)';
 A.Date = '02-Jun-2025';
