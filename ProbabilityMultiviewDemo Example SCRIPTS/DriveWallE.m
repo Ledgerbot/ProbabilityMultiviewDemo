@@ -8,13 +8,13 @@ close all
 clc
 
 %% Create video parameters
-makeVideo = true;
+makeVideo = false;
 
 if makeVideo
-    vid(1) = VideoWriter('Drive_Wall-E_3rdPerson_FixedOrient.mp4','MPEG-4');
-    vid(2) = VideoWriter('Drive_Wall-E_3rdPerson_2dOrient.mp4','MPEG-4');
-    vid(3) = VideoWriter('Drive_Wall-E_3rdPerson_3dUprightOrient.mp4','MPEG-4');
-    vid(4) = VideoWriter('Drive_Wall-E_3rdPerson_3dOrient.mp4','MPEG-4');
+    vid(1) = VideoWriter('DriveWallE_3rdPerson_FixedOrient.mp4','MPEG-4');
+    vid(2) = VideoWriter('DriveWallE_3rdPerson_2dOrient.mp4','MPEG-4');
+    vid(3) = VideoWriter('DriveWallE_3rdPerson_3dUprightOrient.mp4','MPEG-4');
+    vid(4) = VideoWriter('DriveWallE_3rdPerson_3dOrient.mp4','MPEG-4');
     for i = 1:numel(vid)
         open(vid(i));
     end
@@ -96,7 +96,8 @@ ddz = -24.0*sin(4*t);
 plt = plot3(x,y,z,'m','LineWidth',1.5,'Parent',frm_W);
 
 %% Have Wall-E follow the path
-%% -> w/o orientation
+
+%% (1) with orientation fixed orientation
 for i = 1:numel(t)
     H = eye(4);
     H(1:3,4) = [x(i); y(i); z(i)];
@@ -117,7 +118,7 @@ for i = 1:numel(t)
     
 end
 
-%% -> w/ planar orientation
+%% (2) with orientation about a single axis
 for i = 1:numel(t)
     H = eye(4);
     H(1:3,4) = [x(i); y(i); z(i)];
@@ -143,7 +144,7 @@ for i = 1:numel(t)
     
 end
 
-%% -> w/ upright 3D orientation
+%% (3) upright 3D orientation
 for i = 1:numel(t)
     H = eye(4);
     H(1:3,4) = [x(i); y(i); z(i)];
@@ -176,7 +177,7 @@ for i = 1:numel(t)
     
 end
 
-%% -> w/ 3D orientation
+%% (4) w/ 3D orientation
 for i = 1:numel(t)
     H = eye(4);
     H(1:3,4) = [x(i); y(i); z(i)];
