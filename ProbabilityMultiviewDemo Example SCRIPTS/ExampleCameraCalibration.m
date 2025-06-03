@@ -1,4 +1,7 @@
-%% SCRIPT_Lab07_Solution
+%% ExampleCameraCalibration
+% This script provides basic camera calibration tools
+%
+%   M. Kutzer, 03Mar2024, USNA
 clear all
 close all
 clc
@@ -41,7 +44,7 @@ for i = 1:n
 end
 
 % Save parameters
-save('Lab07_calibrationParameters.mat','A_c2m','H_f2c',...
+save('ExampleCalibrationParameters.mat','A_c2m','H_f2c',...
     'calFolderName','cameraParams','imBaseName','imagesUsed');
 
 %% Validating Your Calibration
@@ -67,7 +70,7 @@ for i = 1:n
     % Project points using intrinsics and extrinsics
     tilde_p_m = P_f2m*p_f;	% <-- Scaled pixel coordinates 
     p_m = tilde_p_m./tilde_p_m(3,:); % <-- Pixel coordinates
-    
+
     % Plot points
 	% - Fiducial origin point
     plt0 = plot(axs,p_m(1,1),p_m(2,1),'ys','LineWidth',3,'MarkerSize',8); 
@@ -85,7 +88,7 @@ end
 
 % 1. Load the Wall-E visualization 
 % Open Wall-E visualization and get figure handle
-figWallE = open('Wall-E.fig.fig');
+figWallE = open('Wall-E.fig');
 
 % 2. Recover the Wall-E patch object 
 % Recover the patch object from the Wall-E visualization figure handle
@@ -150,7 +153,7 @@ ptc_m.Vertices = p_m(1:2,:).';
 % [ALLOWS RUNNING THIS SECTION ONLY]
 % Open Wall-E visualization and get figure handle
 if ~exist('figWallE','var') || ~ishandle(figWallE)
-    figWallE = open('Wall-E.fig.fig');
+    figWallE = open('Wall-E.fig');
 end
 
 % 1. Recover the Wall-E patch object 
@@ -158,8 +161,8 @@ end
 ptc_b = findobj(figWallE,'Type','patch','Tag','Wall-E');
 
 % 2. Recover the vertices of Wall-E
-p_b = ptc_b.Vertices.'; % <-- Note the transpose
-p_b(4,:) = 1; % Make points homogeneous positions
+p_s = ptc_b.Vertices.'; % <-- Note the transpose
+p_s(4,:) = 1; % Make points homogeneous positions
 
 % 3. Define Frame o relative to the fiducial frame f
 % Define checkerboard info
@@ -168,6 +171,9 @@ p_b(4,:) = 1; % Make points homogeneous positions
 x_o2f = squareSize*(boardSize(2)-2)/2; % x-offset of frame o wrt frame f
 y_o2f = squareSize*(boardSize(1)-2)/2; % y-offset of frame o wrt frame f
 H_o2f = Tx(x_o2f)*Ty(y_o2f)*Rx(pi);
+% Scale Wall-E for square size
+scWallE = 2;
+p_b = Sx(scWallE*squareSize)*Sy(scWallE*squareSize)*Sz(scWallE*squareSize)*p_s;
 
 % 4. Define Wall-E’s body-fixed frame relative to frame o. Note that we will initially use the identity, and
 % update this frame when we make Wall-E drive.
@@ -215,7 +221,7 @@ ptc_m.Vertices = p_m_falseDepth.';
 % [ALLOWS RUNNING THIS SECTION ONLY]
 % Open Wall-E visualization and get figure handle
 if ~exist('figWallE','var') || ~ishandle(figWallE)
-    figWallE = open('Wall-E.fig.fig');
+    figWallE = open('Wall-E.fig');
 end
 
 % Define position information
@@ -247,10 +253,24 @@ end
 % Recover the patch object from the Wall-E visualization figure handle
 ptc_b = findobj(figWallE,'Type','patch','Tag','Wall-E');
 
+% Recover the vertices of Wall-E
+p_s = ptc_b.Vertices.'; % <-- Note the transpose
+p_s(4,:) = 1; % Make points homogeneous positions
+
+% Define Frame o relative to the fiducial frame f
+% Define checkerboard info
+[boardSize,squareSize] = checkerboardPoints2boardSize( cameraParams.WorldPoints );
+% Define Frame o relative to the fiducial frame f
+x_o2f = squareSize*(boardSize(2)-2)/2; % x-offset of frame o wrt frame f
+y_o2f = squareSize*(boardSize(1)-2)/2; % y-offset of frame o wrt frame f
+H_o2f = Tx(x_o2f)*Ty(y_o2f)*Rx(pi);
+% Scale Wall-E for square size
+scWallE = 2;
+p_b = Sx(scWallE*squareSize)*Sy(scWallE*squareSize)*Sz(scWallE*squareSize)*p_s;
+
 % Recover the patch object from the Wall-E visualization figure handle
-p_b = ptc_b.Vertices.'; % <-- Note the transpose
-% Do not make the points homogeous, this will make projectWithFalseDepth
-% run a little faster.
+p_b(end,:) = []; % Do not make the points homogeous, this will make 
+                 % projectWithFalseDepth run a little faster.
 
 % Define image
 i = 5;
@@ -299,7 +319,7 @@ end
 % [ALLOWS RUNNING THIS SECTION ONLY]
 % Open Wall-E visualization and get figure handle
 if ~exist('figWallE','var') || ~ishandle(figWallE)
-    figWallE = open('Wall-E.fig.fig');
+    figWallE = open('Wall-E.fig');
 end
 
 % Define position information
@@ -331,10 +351,20 @@ end
 % Recover the patch object from the Wall-E visualization figure handle
 ptc_b = findobj(figWallE,'Type','patch','Tag','Wall-E');
 
+% Define Frame o relative to the fiducial frame f
+% Define checkerboard info
+[boardSize,squareSize] = checkerboardPoints2boardSize( cameraParams.WorldPoints );
+% Define Frame o relative to the fiducial frame f
+x_o2f = squareSize*(boardSize(2)-2)/2; % x-offset of frame o wrt frame f
+y_o2f = squareSize*(boardSize(1)-2)/2; % y-offset of frame o wrt frame f
+H_o2f = Tx(x_o2f)*Ty(y_o2f)*Rx(pi);
+% Scale Wall-E for square size
+scWallE = 2;
+p_b = Sx(scWallE*squareSize)*Sy(scWallE*squareSize)*Sz(scWallE*squareSize)*p_s;
+
 % Recover the patch object from the Wall-E visualization figure handle
-p_b = ptc_b.Vertices.'; % <-- Note the transpose
-% Do not make the points homogeous, this will make projectWithFalseDepth
-% run a little faster.
+p_b(end,:) = []; % Do not make the points homogeous, this will make 
+                 % projectWithFalseDepth run a little faster.
 
 % Define image
 i = 5;
