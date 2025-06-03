@@ -19,7 +19,7 @@ load('ExampleCalibrationParameters.mat');
 %% Parse mean intrinsics
 barA_c2m = cameraParams.IntrinsicMatrix.'; % <-- Note the transpose
 % Define vector form
-barAv_c2m = vee(barA_c2m);
+barAv_c2m = veeIntrinsics(barA_c2m);
 
 %% Calculate intrinsic samples
 A_c2m_i = {};
@@ -31,10 +31,10 @@ for i = 1:nImages
     im = imread( fullfile(calFolderName,imName) );
 
     % Calculate intrinsics sample
-    A_c2m_i{i} = imageToIntrinsics(im,camaraParams,squareSize,boardSize);
+    A_c2m_i{i} = imageToIntrinsics(im,cameraParams,squareSize,boardSize);
     % Define vector form
     if ~isempty(A_c2m_i{i})
-        Av_c2m_i(:,i) = vee(A_c2m_i{i});
+        Av_c2m_i(:,i) = veeIntrinsics(A_c2m_i{i});
     else
         Av_c2m_i(:,i) = nan(5,1);
     end
@@ -46,3 +46,35 @@ tfIsEmpty = cellfun(@isempty,A_c2m_i);
 %% Define intrinsic covariance
 sigAv_c2m = ...
     covGivenMean(Av_c2m_i(~tfIsEmpty).',barAv_c2m(:,~tfIsEmpty).'); % <-- Note transpose
+
+%% Visualize intrinsic uncertainty
+fig3D = figure('Name','Intrinsic Uncertainty');
+axs3D = axes('Parent',fig3D,'NextPlot','add');
+xlabel(axs3D,'x (pixels)');
+ylabel(axs3D,'y (pixels)');
+zlabel(axs3D,'Image Number');
+
+% Define unit square in x/y camera frame
+p_c = [...
+    0,1,1,0;...
+    0,0,1,1;...
+    0,0,0,0];
+for i = 1:nImages
+    % Skip empty values
+    if isempty(A_c2m_i{i})
+        continue
+    end
+
+    % Project points
+    tilde_p_m = A_c2m*p_c;
+    p_m = tilde_p_m./tilde_p_m(3,:);
+
+    % Offset "z" using image index (for visualization only)
+    p_m_i = p_m;
+    p_m_i(3,:) = i;
+
+    % Visualize intrinsic sample
+    ptc3D_i(i) = patch('Parent',axs3D,'Vertices',p_m_i.','Faces',1:4,...
+        'EdgeColor','b','FaceColor','b','FaceAlpha',0.2);
+    plt3D_i(i) = plot(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),'*m');
+end
