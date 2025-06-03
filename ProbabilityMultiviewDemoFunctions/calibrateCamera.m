@@ -22,7 +22,6 @@ narginchk(3,3);
 
 % TODO - Check inputs
 
-
 %% Define images to process
 for i = 1:nImages
     fname = sprintf('%s%03d.png',imBaseName,i);
