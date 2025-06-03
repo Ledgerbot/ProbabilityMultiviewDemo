@@ -40,10 +40,9 @@ for i = 1:nImages
     end
 end
 
-% Remove empty elements
+% Flag empty elements
 tfIsEmpty = cellfun(@isempty,A_c2m_i);
-A_c2m_i(tfIsEmpty) = [];
-Av_c2m_i(:,tfIsEmpty) = [];
 
 %% Define intrinsic covariance
-sigAv_c2m = covGivenMean(Av_c2m_i.',barAv_c2m.'); % <-- Note transpose
+sigAv_c2m = ...
+    covGivenMean(Av_c2m_i(~tfIsEmpty).',barAv_c2m(:,~tfIsEmpty).'); % <-- Note transpose
