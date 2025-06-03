@@ -18,7 +18,23 @@ load('ExampleCalibrationParameters.mat');
 
 %% Parse mean intrinsics
 barA_c2m = cameraParams.IntrinsicMatrix.'; % <-- Note the transpose
-% Vector form
+% Define vector form
 barAv_c2m = vee(barA_c2m);
 
 %% Calculate intrinsic samples
+A_c2m_i = {};
+Av_c2m_i = [];
+for i = 1:nImages
+    % Define filename
+    imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
+    % Load image
+    im = imread( fullfile(calFolderName,imName) );
+    
+    % Calculate intrinsics sample
+    A_c2m_i{i} = imageToIntrinsics(im,camaraParams,squareSize,boardSize);
+    % Define vector form
+    Av_c2m_i(:,i) = vee(A_c2m_i{i});
+end
+
+%% Define intrinsic covariance
+sigAv_c2m = covGivenMean(Av_c2m_i.',barAv_c2m.'); % <-- Note transpose
