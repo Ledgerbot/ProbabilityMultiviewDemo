@@ -20,11 +20,10 @@ d_v = datetime(v.Date);
 d_s = datetime('31-Dec-2023');
 if d_v < d_s
     % MATLAB R2023b or older
-    load('CalibrationInfo_Real.mat');
+    load('ExampleCameraCalibration2023.mat');
 else
     % MATLAB R2024a or newer
-    prmpt = sprintf('Select file containing MATLAB %s camera parameters defined as "cameraParams"',v.Release);
-    [filename, pathname] = uigetfile('*.mat', prmpt);
+    load('ExampleCameraCalibration2024.mat');
 end
 
 %% Define intrinsic matrix
@@ -122,6 +121,7 @@ for z_c = z_c_TRU
     im = frm.cdata;
     im = imresize(im,[y_m_MAX,x_m_MAX]);
     
+    % Segment ball from ima
     bin = segmentRedBall(im);
     a_EST(1,iter) = bwarea(bin);
     [y_m,x_m] = bwCentroid(bin);
