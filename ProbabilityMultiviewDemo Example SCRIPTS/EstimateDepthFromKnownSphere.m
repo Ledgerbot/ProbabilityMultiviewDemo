@@ -121,7 +121,7 @@ for z_c = z_c_TRU
     im = frm.cdata;
     im = imresize(im,[y_m_MAX,x_m_MAX]);
     
-    % Segment ball from ima
+    % Segment ball from image
     bin = segmentRedBall(im);
     a_EST(1,iter) = bwarea(bin);
     [y_m,x_m] = bwCentroid(bin);
