@@ -89,6 +89,11 @@ end
 barErr = [];
 smpErr = [];
 for i = 1:nImages
+    % Define filename
+    imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
+    % Load image
+    im = imread( fullfile(calFolderName,imName) );
+
     % Error with mean intrinsics
     barErr(i) = imageToReprojectionError(im,cameraParams,squareSize,barA_c2m);
 
@@ -102,7 +107,11 @@ for i = 1:nImages
     smpErr(i) = imageToReprojectionError(im,cameraParams,squareSize,A_c2m_i{i});
 end
 
+%% Plot results
 fig = figure;
 axs = axes('Parent',fig,'NextPlot','add');
+xlabel(axs,'Image Number');
+ylabel(axs,'RMS Reprojection Error (pixels)');
 plt_b = bar(barErr,'Parent',axs);
 plt_s = bar(smpErr,'Parent',axs);
+legend(axs,'Calibration Intrinsics','Sample Intrinsics');
