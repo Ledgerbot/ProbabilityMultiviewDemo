@@ -33,9 +33,7 @@ A_c2m = cameraParams.IntrinsicMatrix.';
 % -> 3D Figure
 % Initialize figure and axes
 fig3D = figure('Name','3D View','Color',[1 1 1]);
-axs3D = axes('Parent',fig3D);
-hold(axs3D,'on');
-daspect(axs3D,[1 1 1]);
+axs3D = axes('Parent',fig3D,'NextPlot','Add','DataAspectRatio',[1 1 1]);
 addSingleLight(axs3D);
 view(axs3D,3);
 % Plot camera
@@ -46,13 +44,15 @@ plt_c = plotCamera('Size',50,'Color','b');
 x_m_MAX = cameraParams.ImageSize(2);
 y_m_MAX = cameraParams.ImageSize(1);
 % Initialize figure and axes
-fig2D = figure('Name','Image','Units','Pixels',...
+fig2D = figure('Name','Image Generator','Units','Pixels',...
     'Position',[10,10,x_m_MAX,y_m_MAX],'Color',[1 1 1]);
 centerfig(fig2D);
 axs2D = axes('Parent',fig2D,'Units','Normalized','Position',[0,0,1,1],...
-    'Visible','off');
+    'Visible','off','NextPlot','Add','DataAspectRatio',[1 1 1]);
 xlim(axs2D,0.5 + [0,x_m_MAX]);
 ylim(axs2D,0.5 + [0,y_m_MAX]);
+set(fig2D,'Visible','off');
+
 
 %% Define sphere
 r = 51/2;   % 51 mm diameter sphere
@@ -68,11 +68,30 @@ ptc2D = patch(p,'Parent',axs2D,'FaceColor','r','EdgeColor','None');
 h_s2c = triad('Parent',axs3D,'Scale',55,'AxisLabels',{'x_s','y_s','z_s'});
 set(ptc3D,'Parent',h_s2c);
 
+%% Show Simulated Image
+% Get image simulated image
+drawnow
+frm = getframe(axs2D);
+im = frm.cdata;
+im = imresize(im,[y_m_MAX,x_m_MAX]);
+% Visualize simulated image
+figIM = figure('Name','Simulated Image');
+imgIM = imshow(im);
+axsIM = get(imgIM,'Parent');
+set(axsIM,'NextPlot','add','Visible','On');
+xlabel(axsIM,'x (pixels)');
+ylabel(axsIM,'y (pixels)');
+% Define segmentation and centroid overlay
+plt_cm = plot(axsIM,nan,nan,'xc','MarkerSize',10,'LineWidth',1.2);
+ptc_bm = patch('Vertices',nan(3,2),'Faces',1:3,'Parent',axsIM,...
+    'EdgeColor','k','FaceColor','k','FaceAlpha',0.1,'LineWidth',1.8,...
+    'LineStyle','--');
+
 %% Test
-z_c_MAX = 18.0*12*25.4;   % 18.0 feet, converted to mm
+z_c_MAX = 10.0*12*25.4;   % 18.0 feet, converted to mm
 z_c_MIN =  0.5*12*25.4;   %  0.5 feet, converted to mm
-n = 1000;
-z_c_TRU = linspace(z_c_MAX,z_c_MIN,1000);
+n = 200;
+z_c_TRU = linspace(z_c_MAX,z_c_MIN,n);
 
 % Define vertices in the sphere frame
 v_s = p.Vertices.';
@@ -115,16 +134,31 @@ for z_c = z_c_TRU
         break
     end
     
-    % Get image & process
+    % Get image simulated image
     drawnow
     frm = getframe(axs2D);
     im = frm.cdata;
     im = imresize(im,[y_m_MAX,x_m_MAX]);
     
+    % Update image simulation
+    set(imgIM,'CData',im);
+
     % Segment ball from image
     bin = segmentRedBall(im);
     a_EST(1,iter) = bwarea(bin);
     [y_m,x_m] = bwCentroid(bin);
+
+    % Visualize segmentation and centroid
+    if nnz(bin) > 0
+        set(plt_cm,'XData',x_m,'YData',y_m,'Visible','on');
+        % -> Trace the boundaries
+        bnd_m = bwboundaries(bin);
+        set(ptc_bm,'Vertices',fliplr(bnd_m{1}),'Faces',1:size(bnd_m{1},1),'Visible','on');
+    else
+        set(plt_cm,'Visible','off');
+        set(ptc_bm,'Visible','off');
+    end
+
     % Recover depth and estimate x/y position
     z_c_EST(1,iter) = depthFromSphereArea(A_c2m,r,a_EST(1,iter));
     a_TRU(1,iter) = sphereAreaFromDepth(A_c2m,r,z_c);
