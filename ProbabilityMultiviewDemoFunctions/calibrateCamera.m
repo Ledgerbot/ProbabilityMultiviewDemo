@@ -13,6 +13,8 @@ function [cameraParams,imagesUsed] = calibrateCamera(imBaseName,calFolderName,nI
 %     cameraParams - recovered MATLAB camera parameters
 %       imagesUsed - 1xN array defining image indices used in calibration
 %
+%   See also checkerboardPoints2boardSize
+%
 %   M. Kutzer, 04Mar2021, USNA
 
 %% Check input(s)
