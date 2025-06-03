@@ -195,7 +195,7 @@ fprintf('[Complete]\n');
 %% Install/Update required toolboxes
 for ii = 1:size(requiredToolboxes,1)
     try
-        ToolboxUpdate(requiredToolboxes(ii,:));
+        ToolboxUpdate(requiredToolboxes{ii,:});
     catch ME
         fprintf(2,'[ERROR]\nUnable to install required toolbox: "%s"\n',requiredToolboxes{ii});
         fprintf(2,'\t%s\n',ME.message);
@@ -204,7 +204,7 @@ end
 
 for ii = 1:size(supportToolboxes,1)
     try
-        SupportUpdate(supportToolboxes(ii,:));
+        SupportUpdate(supportToolboxes{ii,:});
     catch ME
         fprintf(2,'[ERROR]\nUnable to install required package: "%s"\n',supportToolboxes{ii});
         fprintf(2,'\t%s\n',ME.message);
@@ -364,6 +364,9 @@ end
 if isempty(tbBranches)
     tbBranches = {'main','master'};
 end
+if ~iscell(tbBranches)
+    tbBranches = {tbBranches};
+end
 
 % Setup functions
 ToolboxVer = str2func( sprintf('%sToolboxVer',tbName) );
@@ -477,7 +480,7 @@ fprintf('Installation complete.\n');
 
 end
 % ------------------------------------------------------------------------
-function SupportUpdate(tbName,tbOrg,tbBranch)
+function SupportUpdate(tbName,tbOrg,tbBranches)
 
 % Set defaults
 if nargin < 2
@@ -488,6 +491,9 @@ if nargin < 3
 end
 if isempty(tbBranches)
     tbBranches = {'main','master'};
+end
+if ~iscell(tbBranches)
+    tbBranches = {tbBranches};
 end
 
 % Setup functions
