@@ -45,7 +45,7 @@ tfIsEmpty = cellfun(@isempty,A_c2m_i);
 
 %% Define intrinsic covariance
 sigAv_c2m = ...
-    covGivenMean(Av_c2m_i(~tfIsEmpty).',barAv_c2m(:,~tfIsEmpty).'); % <-- Note transpose
+    covGivenMean(Av_c2m_i(:,~tfIsEmpty).',barAv_c2m.'); % <-- Note transpose
 
 %% Visualize intrinsic uncertainty
 fig3D = figure('Name','Intrinsic Uncertainty');
