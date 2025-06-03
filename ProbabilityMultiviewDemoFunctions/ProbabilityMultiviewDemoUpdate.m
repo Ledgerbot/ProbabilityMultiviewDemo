@@ -1,5 +1,6 @@
-function UKFDesignDemoUpdate
-% UKFDESIGNDEMOUPDATE download and update the UKF Design Demo. 
+function ProbabilityMultiviewDemoUpdate
+% PROBABILITYMULTIVIEWDEMOUPDATE download and update the Probability
+% Multiview Demo.
 %
 %   M. Kutzer 02Jun2025, USNA
 
@@ -9,7 +10,7 @@ function UKFDesignDemoUpdate
 % TODO - update function for general operation
 
 % Update Toolbox
-ToolboxUpdate('UKFDesignDemo');
+ToolboxUpdate('ProbabilityMultiviewDemo');
 
 end
 
