@@ -1,7 +1,7 @@
 %% ExampleIntrinsicUncertainty
 % This script estimates intrinsic uncertainty given calibration images of a
 % known checkerboard.
-%   
+%
 %   NOTE: This script relies on data saved from ExampleCameraCalibration.m
 %
 %   M. Kutzer, 18Jul2024, USNA
@@ -29,12 +29,21 @@ for i = 1:nImages
     imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
     % Load image
     im = imread( fullfile(calFolderName,imName) );
-    
+
     % Calculate intrinsics sample
     A_c2m_i{i} = imageToIntrinsics(im,camaraParams,squareSize,boardSize);
     % Define vector form
-    Av_c2m_i(:,i) = vee(A_c2m_i{i});
+    if ~isempty(A_c2m_i{i})
+        Av_c2m_i(:,i) = vee(A_c2m_i{i});
+    else
+        Av_c2m_i(:,i) = nan(5,1);
+    end
 end
+
+% Remove empty elements
+tfIsEmpty = cellfun(@isempty,A_c2m_i);
+A_c2m_i(tfIsEmpty) = [];
+Av_c2m_i(:,tfIsEmpty) = [];
 
 %% Define intrinsic covariance
 sigAv_c2m = covGivenMean(Av_c2m_i.',barAv_c2m.'); % <-- Note transpose
