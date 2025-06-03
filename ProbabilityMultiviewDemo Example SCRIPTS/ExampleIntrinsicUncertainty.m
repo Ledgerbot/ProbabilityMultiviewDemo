@@ -72,9 +72,14 @@ for i = 1:nImages
     % Offset "z" using image index (for visualization only)
     p_m_i = p_m;
     p_m_i(3,:) = i;
+    
+    % Calculate likelihood associated with sample
+    y = mvnpdf(Av_c2m_i(:,i).',covAv_c2m,barAv_c2m.');
 
     % Visualize intrinsic sample
     ptc3D_i(i) = patch('Parent',axs3D,'Vertices',p_m_i.','Faces',1:4,...
         'EdgeColor','b','FaceColor','b','FaceAlpha',0.2);
-    plt3D_i(i) = plot(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),'*m');
+    plt3D_i(i) = plot3(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,'*m');
+    txt3D_i(i) = plot(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,...
+        sprintf('%6.4f',y));
 end
