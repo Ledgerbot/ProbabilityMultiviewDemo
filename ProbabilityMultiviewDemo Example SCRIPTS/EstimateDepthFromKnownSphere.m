@@ -84,8 +84,8 @@ ylabel(axsIM,'y (pixels)');
 % Define segmentation and centroid overlay
 plt_cm = plot(axsIM,nan,nan,'xc','MarkerSize',10,'LineWidth',1.2);
 ptc_bm = patch('Vertices',nan(3,2),'Faces',1:3,'Parent',axsIM,...
-    'EdgeColor','k','FaceColor','k','FaceAlpha',0.1,'LineWidth',1.8,...
-    'LineStyle','--');
+    'EdgeColor','k','FaceColor','k','FaceAlpha',0.1,'LineWidth',1.0,...
+    'LineStyle',':');
 
 %% Test
 z_c_MAX = 10.0*12*25.4;   % 18.0 feet, converted to mm
