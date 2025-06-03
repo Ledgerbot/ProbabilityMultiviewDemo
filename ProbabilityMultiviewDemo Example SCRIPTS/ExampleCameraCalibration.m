@@ -373,7 +373,7 @@ imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
 % Load image
 im = imread( fullfile(calFolderName,imName) );
 % Plot image
-fig = figure('Name',imName);
+fig = figure('Name',imName,'Color',[1 1 1]);
 axs = axes('Parent',fig);
 img = imshow(im,'Parent',axs);
 hold(axs,'on');
@@ -402,7 +402,7 @@ for k = 1:numel(H_b2o)
     ptc_m.Vertices = p_m_falseDepth.';
     drawnow
     
-    %{
+    
     % /////////////////////////////////////////////////////////////////////
     % NEW CODE (figure handle)
     % "Take a picture" of the figure handle
@@ -411,8 +411,9 @@ for k = 1:numel(H_b2o)
     % Write the frame to the video
     writeVideo(vid,frame);
     % \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    %}
     
+    
+    %{
     % /////////////////////////////////////////////////////////////////////
     % "Take a picture" of the axes handle
     % (this assumes "axs" is the axes object you want in the video)
@@ -420,6 +421,7 @@ for k = 1:numel(H_b2o)
     % Write the frame to the video
     writeVideo(vid,frame);
     % \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    %}
 end
 
 % /////////////////////////////////////////////////////////////////////////
