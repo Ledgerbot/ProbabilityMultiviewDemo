@@ -50,15 +50,16 @@ sigAv_c2m = ...
 %% Visualize intrinsic uncertainty
 fig3D = figure('Name','Intrinsic Uncertainty');
 axs3D = axes('Parent',fig3D,'NextPlot','add');
+view(axs3D,3);
 xlabel(axs3D,'x (pixels)');
 ylabel(axs3D,'y (pixels)');
 zlabel(axs3D,'Image Number');
 
 % Define unit square in x/y camera frame
 p_c = [...
-    0,1,1,0;...
-    0,0,1,1;...
-    0,0,0,0];
+    -1,1,  1,-1;...
+    -1,-1, 1, 1;...
+     1, 1, 1, 1]*0.5;
 for i = 1:nImages
     % Skip empty values
     if isempty(A_c2m_i{i})
@@ -74,12 +75,12 @@ for i = 1:nImages
     p_m_i(3,:) = i;
     
     % Calculate likelihood associated with sample
-    y = mvnpdf(Av_c2m_i(:,i).',covAv_c2m,barAv_c2m.');
+    y = mvnpdf(Av_c2m_i(:,i).',barAv_c2m.',sigAv_c2m);
 
     % Visualize intrinsic sample
     ptc3D_i(i) = patch('Parent',axs3D,'Vertices',p_m_i.','Faces',1:4,...
         'EdgeColor','b','FaceColor','b','FaceAlpha',0.2);
     plt3D_i(i) = plot3(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,'*m');
-    txt3D_i(i) = plot(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,...
+    txt3D_i(i) = text(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,...
         sprintf('%6.4f',y));
 end
