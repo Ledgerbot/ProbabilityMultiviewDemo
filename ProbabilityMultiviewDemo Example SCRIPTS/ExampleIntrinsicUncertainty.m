@@ -67,7 +67,7 @@ for i = 1:nImages
     end
 
     % Project points
-    tilde_p_m = A_c2m*p_c;
+    tilde_p_m = A_c2m_i{i}*p_c;
     p_m = tilde_p_m./tilde_p_m(3,:);
 
     % Offset "z" using image index (for visualization only)
@@ -84,3 +84,25 @@ for i = 1:nImages
     txt3D_i(i) = text(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,...
         sprintf('%6.4f',y));
 end
+
+%% Calculate and visualize reprojection errors
+barErr = [];
+smpErr = [];
+for i = 1:nImages
+    % Error with mean intrinsics
+    barErr(i) = imageToReprojectionError(im,cameraParams,squareSize,barA_c2m);
+
+    % Skip empty values
+    if isempty(A_c2m_i{i})
+        smpErr(i) = nan;
+        continue
+    end
+
+    % Error with sample intrinsics
+    smpErr(i) = imageToReprojectionError(im,cameraParams,squareSize,A_c2m_i{i});
+end
+
+fig = figure;
+axs = axes('Parent',fig,'NextPlot','add');
+plt_b = bar(barErr,'Parent',axs);
+plt_s = bar(smpErr,'Parent',axs);
