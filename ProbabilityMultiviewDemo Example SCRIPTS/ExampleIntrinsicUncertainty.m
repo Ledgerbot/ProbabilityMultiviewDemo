@@ -47,42 +47,49 @@ tfIsEmpty = cellfun(@isempty,A_c2m_i);
 sigAv_c2m = ...
     covGivenMean(Av_c2m_i(:,~tfIsEmpty).',barAv_c2m.'); % <-- Note transpose
 
-%% Visualize intrinsic uncertainty
-fig3D = figure('Name','Intrinsic Uncertainty');
+%% Visualize intrinsic samples
+
+% Initialize figure and axes
+fig3D = figure('Name','Intrinsic Samples');
 axs3D = axes('Parent',fig3D,'NextPlot','add');
 view(axs3D,3);
-xlabel(axs3D,'x (pixels)');
-ylabel(axs3D,'y (pixels)');
+xlabel(axs3D,'x^c / z^c (unitless)');
+ylabel(axs3D,'y^c / z^c (unitless)');
 zlabel(axs3D,'Image Number');
 
-% Define unit square in x/y camera frame
-p_c = [...
-    -1,1,  1,-1;...
-    -1,-1, 1, 1;...
-     1, 1, 1, 1]*0.5;
+% Define image x/y limits in pixels
+xLims_m = [0,cameraParams.ImageSize(2)];
+yLims_m = [0,cameraParams.ImageSize(1)];
+% Define image bounds
+p_m = [...
+    xLims_m([1,2,2,1]);...
+    yLims_m([1,1,2,2])];
+p_m(3,:) = 1;
+
+% Visualize image bounds as scaled camera coordinates
 for i = 1:nImages
     % Skip empty values
     if isempty(A_c2m_i{i})
         continue
     end
 
-    % Project points
-    tilde_p_m = A_c2m_i{i}*p_c;
-    p_m = tilde_p_m./tilde_p_m(3,:);
+    % Define scaled camera-referenced points
+    tilde_p_c = ( A_c2m_i{i} )^(-1)*p_m;
 
     % Offset "z" using image index (for visualization only)
-    p_m_i = p_m;
-    p_m_i(3,:) = i;
+    tilde_p_c(3,:) = i;
     
     % Calculate likelihood associated with sample
     y = mvnpdf(Av_c2m_i(:,i).',barAv_c2m.',sigAv_c2m);
 
     % Visualize intrinsic sample
-    ptc3D_i(i) = patch('Parent',axs3D,'Vertices',p_m_i.','Faces',1:4,...
-        'EdgeColor','b','FaceColor','b','FaceAlpha',0.2);
-    plt3D_i(i) = plot3(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,'*m');
-    txt3D_i(i) = text(axs3D,A_c2m_i{i}(1,3),A_c2m_i{i}(2,3),i,...
-        sprintf('%6.4f',y));
+    ptc3D_i(i) = patch('Parent',axs3D,'Vertices',tilde_p_c.','Faces',1:4,...
+        'EdgeColor',rand(1,3),'FaceColor','none','FaceAlpha',0.2);
+    txt3D_i(i) = text(axs3D,...
+        mean(tilde_p_c(1,:)),...
+        mean(tilde_p_c(2,:)),...
+        mean(tilde_p_c(3,:)),...
+        sprintf('%6.5f',y));
 end
 
 %% Calculate and visualize reprojection errors
@@ -107,11 +114,81 @@ for i = 1:nImages
     smpErr(i) = imageToReprojectionError(im,cameraParams,squareSize,A_c2m_i{i});
 end
 
-%% Plot results
-fig = figure;
+% Plot results
+fig = figure('Name','Reprojection Error Comparison');
 axs = axes('Parent',fig,'NextPlot','add');
 xlabel(axs,'Image Number');
 ylabel(axs,'RMS Reprojection Error (pixels)');
 plt_b = bar(barErr,'Parent',axs);
 plt_s = bar(smpErr,'Parent',axs);
 legend(axs,'Calibration Intrinsics','Sample Intrinsics');
+
+%% Visualize intrinsic uncertainty
+% Define image x/y limits in pixels
+xLims_m = [0,cameraParams.ImageSize(2)];
+yLims_m = [0,cameraParams.ImageSize(1)];
+% Define meshgrid sampling of the image space
+d = 10;
+m = round( diff(xLims_m)/d ); % x-samples
+n = round( diff(yLims_m)/d ); % y-samples
+[X_m,Y_m] = meshgrid(...
+    linspace(xLims_m(1),xLims_m(2),m),...
+    linspace(yLims_m(1),yLims_m(2),n) );
+% Reshape to define pixel coordinates 
+p_m = [];
+p_m(1,:) = reshape(X_m,1,[]);
+p_m(2,:) = reshape(Y_m,1,[]);
+p_m(3,:) = 1;
+
+% Generate random intrinsic matrix sampling
+k = 1000; % intrinsic samples
+Av_c2m_k = mvnrnd(barAv_c2m.',sigAv_c2m,k).';
+
+% Calculate mean scaled camera coordinates
+tilde_pBar_c = ( barA_c2m )^(-1)*p_m;
+
+% Calculate scaled camera coordinates
+tilde_dp_c_k = zeros(k,m*n);
+for i = 1:k
+    % Define scaled camera-referenced points
+    tilde_p_c = ( wedgeIntrinsics(Av_c2m_k(:,i)) )^(-1)*p_m;
+
+    % Define zero-mean points
+    tilde_dp_c = tilde_p_c - tilde_pBar_c;
+
+    % Define distance to mean
+    tilde_dp_c_k(i,:) = sqrt( sum( tilde_dp_c.^2,1 ) );
+end
+
+% Define variance in scaled camera coordinates
+tilde_dpVar_c = var(tilde_dp_c_k);
+
+% Plot results
+fig = figure('Name','Intrinsic Uncertainty');
+z_max = max(tilde_dpVar_c);
+axs = axes('Parent',fig,'NextPlot','add','YDir','reverse');%,...
+    %'DataAspectRatio',(1/z_max)*[1 1 z_max]);
+xlim(axs,xLims_m);
+ylim(axs,yLims_m);
+zlim(axs,[0,max(tilde_dpVar_c)]);
+xlabel(axs,'x^m (pixels)');
+ylabel(axs,'y^m (pixels)');
+
+% 3D points (for debugging)
+%plt = plot3(axs,p_m(1,:),p_m(2,:),tilde_dpVar_c,'.');
+
+% Surface Plot
+Z = reshape(tilde_dpVar_c,n,m);
+srf = surf(axs,X_m,Y_m,Z,'EdgeColor','none');
+cbr = colorbar(axs,'eastoutside');
+
+%{
+% Add z & color labels
+% -> label string
+str = '$$\sigma^2\left( \left| \frac{p^c}{z^c} - \frac{\bar{p}^c}{\bar{z}^c} \right|\right)$$';
+% -> z-label
+zlabel(axs,str,'Interpreter','Latex');
+% -> color label
+cbr.Label.Interpreter = 'Latex';
+cbr.Label.String = str;
+%}
