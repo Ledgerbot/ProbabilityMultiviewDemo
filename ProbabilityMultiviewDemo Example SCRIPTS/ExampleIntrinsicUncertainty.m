@@ -78,7 +78,7 @@ for i = 1:nImages
 
     % Offset "z" using image index (for visualization only)
     tilde_p_c(3,:) = i;
-    
+
     % Calculate likelihood associated with sample
     y = mvnpdf(Av_c2m_i(:,i).',barAv_c2m.',sigAv_c2m);
 
@@ -123,7 +123,7 @@ plt_b = bar(barErr,'Parent',axs);
 plt_s = bar(smpErr,'Parent',axs);
 legend(axs,'Calibration Intrinsics','Sample Intrinsics');
 
-%% Visualize intrinsic uncertainty
+%% Visualize camera intrinsics uncertainty
 % Define image x/y limits in pixels
 xLims_m = [0,cameraParams.ImageSize(2)];
 yLims_m = [0,cameraParams.ImageSize(1)];
@@ -134,7 +134,7 @@ n = round( diff(yLims_m)/d ); % y-samples
 [X_m,Y_m] = meshgrid(...
     linspace(xLims_m(1),xLims_m(2),m),...
     linspace(yLims_m(1),yLims_m(2),n) );
-% Reshape to define pixel coordinates 
+% Reshape to define pixel coordinates
 p_m = [];
 p_m(1,:) = reshape(X_m,1,[]);
 p_m(2,:) = reshape(Y_m,1,[]);
@@ -167,12 +167,12 @@ tilde_dpVar_c = var(tilde_dp_c_k);
 fig = figure('Name','Intrinsic Uncertainty');
 z_max = max(tilde_dpVar_c);
 axs = axes('Parent',fig,'NextPlot','add','YDir','reverse');%,...
-    %'DataAspectRatio',(1/z_max)*[1 1 z_max]);
+%'DataAspectRatio',(1/z_max)*[1 1 z_max]);
 xlim(axs,xLims_m);
 ylim(axs,yLims_m);
 zlim(axs,[0,max(tilde_dpVar_c)]);
-xlabel(axs,'x^m (pixels)');
-ylabel(axs,'y^m (pixels)');
+xlabel(axs,'$x^m$ (pixels)','Interpreter','Latex');
+ylabel(axs,'$y^m$ (pixels)','Interpreter','Latex');
 
 % 3D points (for debugging)
 %plt = plot3(axs,p_m(1,:),p_m(2,:),tilde_dpVar_c,'.');
@@ -182,13 +182,55 @@ Z = reshape(tilde_dpVar_c,n,m);
 srf = surf(axs,X_m,Y_m,Z,'EdgeColor','none');
 cbr = colorbar(axs,'eastoutside');
 
-%{
 % Add z & color labels
 % -> label string
-str = '$$\sigma^2\left( \left| \frac{p^c}{z^c} - \frac{\bar{p}^c}{\bar{z}^c} \right|\right)$$';
+str = '$\sigma^2\left( \left| \frac{p^c}{z^c} - \frac{\bar{p}^c}{\bar{z}^c} \right|\right)$';
 % -> z-label
-zlabel(axs,str,'Interpreter','Latex');
+%zlabel(axs,str,'Interpreter','Latex');
 % -> color label
 cbr.Label.Interpreter = 'Latex';
 cbr.Label.String = str;
-%}
+
+%% Overlay calibration data
+for i = 1:nImages
+    % -> Load image
+    % Define filename
+    imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
+    % Load image
+    im = imread( fullfile(calFolderName,imName) );
+
+    % -> Recover checkerboard points
+    % Define p_m from image of checkerboard
+    [imagePoints,~] = detectCheckerboardPoints(im);
+    % Identify finite points
+    tfIsFinite = isfinite(imagePoints(:,1));
+    
+    % Undistort image points
+    %imagePoints = imagePoints(tfIsFinite,:);
+    %imagePoints = undistortPoints(imagePoints,cameraParams);
+    imagePoints = undistortPoints(imagePoints(tfIsFinite,:),cameraParams);
+    
+    % -> Visualize checkerboard point boarder
+    % Define outer bounds of image points
+    idx = convhull(imagePoints(:,1),imagePoints(:,2));
+    idx(end) = [];
+    % Patch vertices
+    verts = imagePoints(idx,:);
+    verts(:,3) = z_max;
+    % Patch faces
+    faces = 1:numel(idx);
+    % Create patch object
+    color = 'w'; %rand(1,3)*0.5 + 0.5;
+    ptc(i) = patch('Parent',axs,'Vertices',verts,'Faces',faces,...
+        'FaceAlpha',0.3,'FaceColor',color,'EdgeColor','m','Tag',...
+        'Checkerboard Overlay');
+    % Plot checkerboard origin
+    plt(1,i) = plot3(axs,imagePoints(1,1),imagePoints(1,2),z_max,'dr',...
+        'MarkerSize',5,'LineWidth',0.1,'MarkerFaceColor','r');
+    plt(2,i) = plot3(axs,imagePoints(end,1),imagePoints(end,2),z_max,'og',...
+        'MarkerSize',5,'LineWidth',0.1,'MarkerFaceColor','g');
+    plt(3,i) = plot3(axs,...
+        [imagePoints(1,1),imagePoints(end,1)],...
+        [imagePoints(1,2),imagePoints(end,2)],...
+        z_max*ones(1,2),'-m','LineWidth',1.0);
+end
