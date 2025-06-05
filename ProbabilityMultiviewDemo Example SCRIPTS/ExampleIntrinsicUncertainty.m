@@ -95,6 +95,7 @@ end
 %% Calculate and visualize reprojection errors
 barErr = [];
 smpErr = [];
+dp_m = [];
 for i = 1:nImages
     % Define filename
     imName = sprintf('%s%03d.png',imBaseName,imagesUsed(i));
@@ -102,7 +103,8 @@ for i = 1:nImages
     im = imread( fullfile(calFolderName,imName) );
 
     % Error with mean intrinsics
-    barErr(i) = imageToReprojectionError(im,cameraParams,squareSize,barA_c2m);
+    barErr(i) = ...
+        imageToReprojectionError(im,cameraParams,squareSize,barA_c2m);
 
     % Skip empty values
     if isempty(A_c2m_i{i})
@@ -111,7 +113,11 @@ for i = 1:nImages
     end
 
     % Error with sample intrinsics
-    smpErr(i) = imageToReprojectionError(im,cameraParams,squareSize,A_c2m_i{i});
+    [smpErr(i),~,dp_m_i] = ...
+        imageToReprojectionError(im,cameraParams,squareSize,A_c2m_i{i});
+
+    % Append pixel error for simplified tracking uncertainty estimate
+    dp_m = [dp_m, dp_m_i];
 end
 
 % Plot results
@@ -221,4 +227,64 @@ for i = 1:nImages
         ptc(i,k) = patch(axs,ptcStruct(k),'FaceColor',squareColors{k},...
             'EdgeColor','none','FaceAlpha',0.3);
     end
+end
+
+%% Calculate simplified tracking uncertainty in pixels
+% Pixel error mean
+bar_dp_m = mean(dp_m.').';
+% Pixel error covariance
+sig_dp_m = cov(dp_m.');
+
+% Create and label figure
+fig = figure('Name','Pixel Uncertainty');
+axs = axes('Parent',fig,'NextPlot','add','DataAspectRatio',[1 1 1]);
+xlabel(axs,'\Delta x (pixels)');
+ylabel(axs,'\Delta y (pixels)');
+zlabel(axs,'Likelihood');
+
+% Plot confidence interval to define interpolation bounds
+% -> Use 95% confidence interval to define bounds
+efit = mvnpdfConfInterval(bar_dp_m.',sig_dp_m,0.95);
+ptc = plotEllipse(efit);
+
+% Define meshgrid
+xLims = xlim(axs);
+yLims = ylim(axs);
+dLims = min([diff(xLims),diff(yLims)]);
+    m = round( 100 * diff(yLims)/dLims );
+    n = round( 100 * diff(xLims)/dLims );
+[X,Y] = meshgrid(...
+    linspace(xLims(1),xLims(2),n),...
+    linspace(yLims(1),yLims(2),m) );
+delete(ptc);
+
+% Evaluate multivariate PDF
+smp_dp_m = [];
+smp_dp_m(1,:) = reshape(X,1,[]);
+smp_dp_m(2,:) = reshape(Y,1,[]);
+
+% Calculate likelihood
+lkl_dp_m = mvnpdf(smp_dp_m.',bar_dp_m.',sig_dp_m);
+
+% Plot results
+Z = reshape(lkl_dp_m,m,n);
+srf = surf(axs,X,Y,Z,'EdgeColor','none');
+
+% Plot confidence intervals
+cnfs = [0.10,0.25,0.50,0.75,0.95];
+for i = 1:numel(cnfs)
+    cnf = cnfs(i);
+    efit = mvnpdfConfInterval(bar_dp_m.',sig_dp_m,cnf);
+    ptc(i) = plotEllipse(efit);
+
+    set(ptc(i),'Parent',axs,'EdgeColor','k');
+    xyz = get(ptc(i),'Vertices').';
+    % Add false height so the intervals will show up
+    xyz(3,:) = max(lkl_dp_m);
+    set(ptc(i),'Vertices',xyz.');
+
+    % Label interval
+    txt(i) = text(xyz(1,1),xyz(2,1),xyz(3,1),...
+        sprintf('%.1f%%',cnf*100),'Parent',axs,...
+        'HorizontalAlignment','left','VerticalAlignment','bottom');
 end
