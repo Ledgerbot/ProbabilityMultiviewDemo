@@ -218,14 +218,18 @@ for i = 1:nImages
     imagePoints(~tfIsFinite,:) = nan;
 
     % -> Visualize checkerboard
-    ptcStruct = patchCheckerboardImagePoints(imagePoints,boardSize,'2nd Order');
-    color = rand(1,3);
-    squareColors{1} = color./10;         % black squares
-    squareColors{2} = color./max(color); % white squares
-    for k = 1:2
-        ptcStruct(k).Vertices(:,3) = z_max;
-        ptc(i,k) = patch(axs,ptcStruct(k),'FaceColor',squareColors{k},...
-            'EdgeColor','none','FaceAlpha',0.3);
+    try
+        ptcStruct = patchCheckerboardImagePoints(imagePoints,boardSize,'2nd Order');
+        color = rand(1,3);
+        squareColors{1} = color./10;         % black squares
+        squareColors{2} = color./max(color); % white squares
+        for k = 1:2
+            ptcStruct(k).Vertices(:,3) = z_max;
+            ptc(i,k) = patch(axs,ptcStruct(k),'FaceColor',squareColors{k},...
+                'EdgeColor','none','FaceAlpha',0.3);
+        end
+    catch
+
     end
 end
 
@@ -251,8 +255,8 @@ ptc = plotEllipse(efit);
 xLims = xlim(axs);
 yLims = ylim(axs);
 dLims = min([diff(xLims),diff(yLims)]);
-    m = round( 100 * diff(yLims)/dLims );
-    n = round( 100 * diff(xLims)/dLims );
+m = round( 100 * diff(yLims)/dLims );
+n = round( 100 * diff(xLims)/dLims );
 [X,Y] = meshgrid(...
     linspace(xLims(1),xLims(2),n),...
     linspace(yLims(1),yLims(2),m) );
