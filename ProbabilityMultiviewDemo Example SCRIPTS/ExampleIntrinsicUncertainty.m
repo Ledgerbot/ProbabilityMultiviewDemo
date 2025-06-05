@@ -204,33 +204,21 @@ for i = 1:nImages
     [imagePoints,~] = detectCheckerboardPoints(im);
     % Identify finite points
     tfIsFinite = isfinite(imagePoints(:,1));
-    
+
     % Undistort image points
     %imagePoints = imagePoints(tfIsFinite,:);
     %imagePoints = undistortPoints(imagePoints,cameraParams);
     imagePoints = undistortPoints(imagePoints(tfIsFinite,:),cameraParams);
-    
-    % -> Visualize checkerboard point boarder
-    % Define outer bounds of image points
-    idx = convhull(imagePoints(:,1),imagePoints(:,2));
-    idx(end) = [];
-    % Patch vertices
-    verts = imagePoints(idx,:);
-    verts(:,3) = z_max;
-    % Patch faces
-    faces = 1:numel(idx);
-    % Create patch object
-    color = 'w'; %rand(1,3)*0.5 + 0.5;
-    ptc(i) = patch('Parent',axs,'Vertices',verts,'Faces',faces,...
-        'FaceAlpha',0.3,'FaceColor',color,'EdgeColor','m','Tag',...
-        'Checkerboard Overlay');
-    % Plot checkerboard origin
-    plt(1,i) = plot3(axs,imagePoints(1,1),imagePoints(1,2),z_max,'dr',...
-        'MarkerSize',5,'LineWidth',0.1,'MarkerFaceColor','r');
-    plt(2,i) = plot3(axs,imagePoints(end,1),imagePoints(end,2),z_max,'og',...
-        'MarkerSize',5,'LineWidth',0.1,'MarkerFaceColor','g');
-    plt(3,i) = plot3(axs,...
-        [imagePoints(1,1),imagePoints(end,1)],...
-        [imagePoints(1,2),imagePoints(end,2)],...
-        z_max*ones(1,2),'-m','LineWidth',1.0);
+    imagePoints(~tfIsFinite,:) = nan;
+
+    % -> Visualize checkerboard
+    ptcStruct = patchCheckerboardImagePoints(imagePoints,boardSize,'2nd Order');
+    color = rand(1,3);
+    squareColors{1} = color./10;         % black squares
+    squareColors{2} = color./max(color); % white squares
+    for k = 1:2
+        ptcStruct(k).Vertices(:,3) = z_max;
+        ptc(i,k) = patch(axs,ptcStruct(k),'FaceColor',squareColors{k},...
+            'EdgeColor','none','FaceAlpha',0.3);
+    end
 end
