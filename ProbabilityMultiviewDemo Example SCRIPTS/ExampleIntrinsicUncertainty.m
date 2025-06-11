@@ -12,6 +12,7 @@ clc
 
 %% Load saved data
 load('ExampleCalibrationParameters.mat');
+nImages = numel(imagesUsed);
 
 %% Define checkerboard info
 [boardSize,squareSize] = checkerboardPoints2boardSize( cameraParams.WorldPoints );
